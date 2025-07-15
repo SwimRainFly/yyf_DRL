@@ -1,14 +1,14 @@
 # RACCOON
 
-```txt
+
 This is a PyTorch implementation of Graph Neural Networks combined with Deep Reinforcement Learning (GNN-DRL) for multi-agent environments. The solution integrates graph neural networks to model agent interactions and relationships, enhancing cooperative behaviors and decision-making in complex multi-agent systems.
-```
+
 
 # How to use my code?
 
- ```python
+ 
 You can dircetly run 'MAPPO_MPE_main.py' in your own IDE
- ```
+
 
 # Requirements
 
@@ -114,6 +114,6 @@ num_contents==100
 
 # Some details
 
-    We also provide the implementation of not using GNN. You can set 'use_gnn'=False in the hyperparameters setting, if you don't want to use RNN.
+We also provide the implementation of not using GNN. You can set 'use_gnn'=False in the hyperparameters setting, if you don't want to use RNN.
 
  
