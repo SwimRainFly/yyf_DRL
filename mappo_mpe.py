@@ -14,10 +14,10 @@ def positive_safe_sigmoid(x):
 
 class GCN(nn.Module):
     def __init__(self,
-                 #g,  # 图结构
-                 in_feats,  # 输入特征的维度
-                 n_hidden,  # 隐藏层的维度
-                 n_classes,  # 输出类别数
+                 #g,  # Graph structure
+                 in_feats,
+                 n_hidden,
+                 n_classes,
                  n_layers,
                  activation,
                  device,
@@ -25,10 +25,10 @@ class GCN(nn.Module):
         super(GCN, self).__init__()
         self.in_feats = in_feats
         self.n_classes = n_classes
-        #self.g = None  # 初始化时不设置图
-        self.device = device  # 添加这一行
-        #self.g = (dgl.add_self_loop(g)).to(device) #将图 g 添加自环后移至指定的设备
-        self.layers = nn.ModuleList() #创建一个模块列表，用于存储网络的各层。
+        #self.g = None
+        self.device = device
+        #self.g = (dgl.add_self_loop(g)).to(device)
+        self.layers = nn.ModuleList() #Create a list of modules for storing each layer of the network
         # input layer
         self.layers.append(GraphConv(in_feats, n_hidden, activation=activation).to(device))
 
@@ -37,7 +37,7 @@ class GCN(nn.Module):
             self.layers.append(GraphConv(n_hidden, n_hidden, activation=activation).to(device))
         # output layer
         self.layers.append(GraphConv(n_hidden, n_classes, activation=positive_safe_sigmoid).to(device))
-        if args.use_orthogonal_init: #如果参数中指定了使用正交初始化，则对每一层进行正交初始化
+        if args.use_orthogonal_init:
             print("------use_orthogonal_init gnn------")
             for layer_index in range(len(self.layers)):
                 orthogonal_init(self.layers[layer_index])
@@ -46,10 +46,10 @@ class GCN(nn.Module):
         # if g is None:
         #     raise ValueError("Graph cannot be None")
         # print("Features Tensor Shape:", features.shape)
-        # # 打印图的信息
+
         # print("Graph Info: Number of Nodes =", g.number_of_nodes())
         # print("Graph Info: Number of Edges =", g.number_of_edges())
-        # # 检查特征尺寸是否与 in_feats 匹配
+
         # if features.size(1) != self.in_feats:
         #     raise ValueError(f"Feature size {features.size(1)} does not match in_feats {self.in_feats}")
 
@@ -57,9 +57,9 @@ class GCN(nn.Module):
         self.g = (dgl.add_self_loop(g)).to(self.device)
         h = features.to(torch.float32)
         #print("Shape of feature matrix h:", h.shape)
-        for i, layer in enumerate(self.layers):#逐层应用图卷积，更新特征。
+        for i, layer in enumerate(self.layers):
             #print("Shape of feature matrix h:", h.shape)
-            h = layer(self.g, h) #使用图结构和当前节点特征来计算下一层的节点特征
+            h = layer(self.g, h) #Calculate the node features of the next layer using the graph structure and the current node features
         return h
 
 # Trick 8: orthogonal initialization
@@ -167,7 +167,7 @@ class GnnMlpActor(nn.Module):
     def __init__(self, args):
         self.embedding_dim = args.embedding_dim
         super(GnnMlpActor, self).__init__()
-        #GCN网络
+        #GCN
         self.gnn = GCN(
                  #g=None,
                  in_feats=args.obs_dim,
@@ -177,10 +177,10 @@ class GnnMlpActor(nn.Module):
                  activation=args.gnn_activation,
                  device=args.device,
                  args=args)
-        #MLP网络
+        #MLP
         self.mlp = Actor_MLP(args=args, actor_input_dim=args.embedding_dim )
 
-    def forward(self, actor_input, current_graph):#接受1个输入
+    def forward(self, actor_input, current_graph):
         # if train:
         # gnn_input.shape = (batch_size, max_episode_len, region_N, gnn_input_dim)
         # actor_input.shape = (batch_size, max_episode_len, N, actor_input_dim)
@@ -188,13 +188,13 @@ class GnnMlpActor(nn.Module):
         # gnn_input.shape = (region_N, gnn_input_dim)
         # actor_input.shape = (N, actor_input_dim)
 
-        # 确保传入有效的图
+        # Make sure to pass in a valid graph
         if current_graph is None:
             raise ValueError("current_graph cannot be None")
 
         actor_input_shape = actor_input.shape
 
-        # 更新 GCN 中的图
+        # Update the graphs in GCN
         self.gnn.g = current_graph
 
         if (len(actor_input.shape) == 4):

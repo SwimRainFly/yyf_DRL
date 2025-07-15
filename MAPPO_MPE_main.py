@@ -26,7 +26,7 @@ class Runner_MAPPO_MPE:
         # Create env
         #self.env = make_env(env_name, discrete=True) # Discrete action space
         # env_name = 'yyf-v1'
-        # self.env = gym.make(env_name)  # 创建您的自定义环境实例
+        # self.env = gym.make(env_name)
 
         self.args.N = self.args.n_agent  # The number of agents
         self.args.obs_dim_n = [args.obs_dim for i in range(self.args.N)]  # obs dimensions of N agents
@@ -45,7 +45,6 @@ class Runner_MAPPO_MPE:
         else:
             self.args.state_dim = np.sum(self.args.obs_dim_n)  # The dimensions of global state space（Sum of the dimensions of the local observation space of all agents）
 
-        # 创建环境 不用gym
         # self.u, self.v = torch.tensor\
         #                      ([ 0, 0, 0, 0, 0, 0,      1, 1,    2, 2, 2, 2,        3, 3, 3, 3]), torch.tensor(
         #                       [ 7, 9, 16, 17, 18, 21,  6, 22,   14, 15, 19, 23,    4,  8, 11, 13])
@@ -56,13 +55,13 @@ class Runner_MAPPO_MPE:
         self.env = MECVehicleCacheEnv(
             #mec_vehicle_graph=self.g,
             #use_gnn=True,
-            num_mec=args.num_mec,  # 正方形
-            num_vehicles=args.num_vehicles,  # 设置多
+            num_mec=args.num_mec,
+            num_vehicles=args.num_vehicles,
             max_cache_size_mec=10,
             max_cache_size_vehicle=5,
             max_steps=args.episode_limit,
             mec_radius=20,
-            num_contents=50,  # 50-100
+            num_contents=50,
             min_content_size=1,
             max_content_size=5,
             seed = seed
@@ -148,12 +147,12 @@ class Runner_MAPPO_MPE:
 
 
             if self.use_gnn:
-                current_graph = self.env.mec_vehicle_graph  # 从环境中获取当前图
+                current_graph = self.env.mec_vehicle_graph  # Obtain the current graph from the environment
                 a_n, a_logprob_n, gnn_output = self.agent_n.choose_action(obs_n, current_graph, evaluate=evaluate)  # Get actions and the corresponding log probabilities of N agents
                 s = np.array(gnn_output).flatten()
                 v_n = self.agent_n.get_value(s)
             else:
-                current_graph = self.env.mec_vehicle_graph  # 从环境中获取当前图
+                current_graph = self.env.mec_vehicle_graph  # Obtain the current graph from the environment
                 a_n, a_logprob_n, gnn_output = self.agent_n.choose_action(obs_n, None, evaluate=evaluate)
                 s = np.array(obs_n).flatten()  # In MPE, global state is the concatenation of all agents' local obs.
                 v_n = self.agent_n.get_value(s)  # Get the state values (V(s)) of N agents
@@ -226,16 +225,16 @@ class Runner_Random:
         self.env = MECVehicleCacheEnv(
             #mec_vehicle_graph=self.g,
             #use_gnn=True,
-            num_mec=4,  # 正方形
-            num_vehicles=20,  # 设置多
+            num_mec=4,
+            num_vehicles=20,
             max_cache_size_mec=10,
             max_cache_size_vehicle=5,
             max_steps=500,
             mec_radius=20,
-            num_contents=50,  # 50-100
+            num_contents=50,
             min_content_size=1,
             max_content_size=5,
-            seed=1  # 设置一个固定的种子值
+            seed=1
         )
         self.args.N = self.env.agent_num  # The number of agents
 
@@ -272,8 +271,8 @@ class Runner_Random:
         obs_n = self.env.reset()
 
         for episode_step in range(self.args.episode_limit):
-            # 对整个动作空间进行采样
-            a_n = self.env.action_space.sample()  # 这将为所有智能体生成动作
+            # Sample the entire action space
+            a_n = self.env.action_space.sample()  # Generate actions for all agents
             obs_next_n, r_n, done_n, _ = self.env.step(a_n)
             # episode_reward += r_n[0]
             for re in r_n:
@@ -295,10 +294,10 @@ class Runner_Random:
         self.evaluate_rewards.append(evaluate_reward)
         print("Total steps: {} \t Evaluate reward: {}".format(self.total_steps, evaluate_reward))
 
-        # 记录评估奖励到TensorBoard
+        # Record the evaluation rewards to the TensorBoard
         self.writer.add_scalar('evaluate_step_rewards_{}'.format(self.env_name), evaluate_reward,
                                global_step=self.total_steps)
-        # 可选：将评估奖励保存到文件
+        # Optional: Save the assessment rewards to a file
         np.save('./data_train/MAPPO_env_{}_number_{}_seed_{}.npy'.format(self.env_name, self.number, self.seed),
                 np.array(self.evaluate_rewards))
 
@@ -312,16 +311,16 @@ class Runner_Greedy:
         self.env = MECVehicleCacheEnv(
             # mec_vehicle_graph=self.g,
             # use_gnn=True,
-            num_mec=4,  # 正方形
-            num_vehicles=20,  # 设置多
+            num_mec=4,
+            num_vehicles=20,
             max_cache_size_mec=10,
             max_cache_size_vehicle=5,
             max_steps=500,
             mec_radius=20,
-            num_contents=50,  # 50-100
+            num_contents=50,
             min_content_size=1,
             max_content_size=5,
-            seed=1  # 设置一个固定的种子值
+            seed=1
         )
         self.args.N = self.env.agent_num  # The number of agents
         # Create a tensorboard
@@ -341,30 +340,30 @@ class Runner_Greedy:
     def greedy_action(self, obs_n):
         actions = []
         for idx, obs in enumerate(obs_n):
-            current_cache = obs[1]  # 当前已缓存的容量
-            recommendation_score = obs[2]  # 推荐指数
-            content_size = self.env.contents_info[self.env.content_id][1]  # 当前内容的大小
+            current_cache = obs[1]  # Currently cached capacity
+            recommendation_score = obs[2]  # recommendation score
+            content_size = self.env.contents_info[self.env.content_id][1]  # The size of the current content
 
-            # 根据节点类型（MEC或车辆）确定最大缓存大小
-            if idx < self.env.num_mec:  # MEC节点
+            # Determine the maximum cache size based on the node type (MEC or vehicle)
+            if idx < self.env.num_mec:  # MEC
                 max_cache_size = self.env.max_cache_size_mec
-            else:  # 车辆节点
+            else:  # vehicle
                 max_cache_size = self.env.max_cache_size_vehicle
 
-            # 检查缓存空间是否足够
+            # Check if the cache space is sufficient
             if current_cache + content_size <= max_cache_size:
-                # 如果推荐指数较高，选择缓存并推荐
-                if recommendation_score > 5:  # 举例，这里可以设置一个阈值
-                    actions.append(0)  # 缓存并推荐
+                # If the recommendation index is high, choose to cache and recommend
+                if recommendation_score > 5:
+                    actions.append(0)  # Cache and recommend
                 else:
-                    actions.append(1)  # 只缓存
+                    actions.append(1)  # only recommend
             else:
-                # 如果没有足够空间，根据推荐指数决定是否仅推荐
-                if recommendation_score > 5:  # 同样的阈值
-                    actions.append(2)  # 仅推荐
+                # If there is not enough space, decide whether to recommend only based on the recommendation index
+                if recommendation_score > 5:
+                    actions.append(2)  # only recommend
                 else:
-                    actions.append(3)  # 既不缓存也不推荐
-            #print(f"Agent {idx}, Action: {actions[-1]}")  # 打印每个代理的动作
+                    actions.append(3)  # Neither cache nor recommend
+            #print(f"Agent {idx}, Action: {actions[-1]}")  # Print the actions of each agent
             # 调试打印
             #print(f"Agent {idx}, Observation: {obs}, Chosen Action: {actions[-1]}")
 
@@ -378,8 +377,8 @@ class Runner_Greedy:
                 self.evaluate_policy()
                 evaluate_num += 1
 
-            episode_steps = self.run_episode(evaluate=False)  # 获取执行的步数
-            self.total_steps += episode_steps  # 只根据步数更新total_steps
+            episode_steps = self.run_episode(evaluate=False)  # Obtain the number of steps for execution
+            self.total_steps += episode_steps  # Update total_steps only based on the number of steps
 
         self.evaluate_policy()
         self.env.close()
@@ -387,40 +386,40 @@ class Runner_Greedy:
 
     def run_episode(self, evaluate=False):
         obs_n = self.env.reset()
-        episode_steps = 0  # 使用单独的变量来计数步数
+        episode_steps = 0  # Use separate variables to count the number of steps
         episode_reward = 0
         for _ in range(self.args.episode_limit):
             a_n = self.greedy_action(obs_n)
             obs_next_n, r_n, done_n, _ = self.env.step(a_n)
-            episode_steps += 1  # 递增步数
+            episode_steps += 1
             episode_reward += sum(r_n)
             # for re in r_n:
             #     episode_reward += re
-            # 调试打印
+            # test
             #print(f"Step: {_}, Actions: {a_n}, Reward: {r_n}, New Observation: {obs_next_n}")
 
             obs_n = obs_next_n
 
             if all(done_n):
                 break
-        # 调试打印
+        # test
         #print(f"Total Reward for this Episode: {episode_reward}")
-        return episode_steps  # 返回执行的步数
+        return episode_steps
 
 
     def evaluate_policy(self):
         evaluate_reward = 0
         for eval_episode in range(self.args.evaluate_times):
             episode_reward = 0
-            obs_n = self.env.reset()  # 重置环境并获取初始观测值
-            #print(f"Evaluation Episode {eval_episode + 1}: Initial Observation: {obs_n}")  # 打印初始观测值
+            obs_n = self.env.reset()  # Reset the environment and obtain the initial observations
+            #print(f"Evaluation Episode {eval_episode + 1}: Initial Observation: {obs_n}")  # Print the initial observations
 
             for step in range(self.args.episode_limit):
-                a_n = self.greedy_action(obs_n)  # 根据当前观测值选择动作
-                obs_next_n, r_n, done_n, _ = self.env.step(a_n)  # 执行动作并获取新的观测值和奖励
+                a_n = self.greedy_action(obs_n)  # Select the action based on the current observed values
+                obs_next_n, r_n, done_n, _ = self.env.step(a_n)  # Perform actions and obtain new observations and rewards
 
-                episode_reward += sum(r_n)  # 累加奖励
-                obs_n = obs_next_n  # 更新观测值
+                episode_reward += sum(r_n)  # Cumulative rewards
+                obs_n = obs_next_n  # Update the observed values
 
                 #print(f"Step {step + 1}: Actions: {a_n}, Reward: {r_n}, New Observation: {obs_next_n}, Done: {done_n}")  # 打印每步信息
 
@@ -428,17 +427,17 @@ class Runner_Greedy:
                     #print("All agents done at step:", step + 1)
                     break
 
-            #print(f"Evaluation Episode {eval_episode + 1} Total Reward: {episode_reward}")  # 打印每个评估回合的总奖励
+            #print(f"Evaluation Episode {eval_episode + 1} Total Reward: {episode_reward}")  # Print the total reward for each evaluation round
             evaluate_reward += episode_reward
 
 
         evaluate_reward = evaluate_reward / self.args.evaluate_times
-        #self.total_steps += self.args.episode_limit  # 更新总步数
+        #self.total_steps += self.args.episode_limit  # Update the total number of steps
         print("Total steps: {} \t Evaluate reward: {}".format(self.total_steps, evaluate_reward))
-        # 记录评估奖励到TensorBoard
+        # Record the evaluation rewards to the TensorBoard
         self.writer.add_scalar('evaluate_step_rewards_{}'.format(self.env_name), evaluate_reward,
                                global_step=self.total_steps)
-        # 可选：将评估奖励保存到文件
+        # Optional: Save the assessment rewards to a file
         np.save('./data_train/MAPPO_env_{}_number_{}_seed_{}.npy'.format(self.env_name, self.number, self.seed),
                 np.array(self.evaluate_rewards))
         #return evaluate_reward
