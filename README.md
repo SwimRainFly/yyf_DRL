@@ -114,6 +114,6 @@ num_contents==100
 
 # Some details
 
-We also provide the implementation of not using GNN. You can set 'use_gnn'=False in the hyperparameters setting, if you don't want to use RNN.
+We also provide the implementation of not using GNN. You can set 'use_gnn'=False in the hyperparameters setting, if you don't want to use GNN.
 
  
